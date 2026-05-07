@@ -23,6 +23,15 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, service: "group-project-ghost" });
 });
 
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "group-project-ghost-api",
+    message: "Backend is running. Connect the frontend with VITE_API_URL ending in /api.",
+    health: "/api/health",
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/logs", authMiddleware, logRoutes);
 app.use("/api/projects", authMiddleware, projectRoutes);
