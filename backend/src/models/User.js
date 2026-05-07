@@ -1,19 +1,40 @@
+import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
-const pinPattern = /^\d{4}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: emailPattern,
+      index: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 8,
+      select: false,
+    },
+    displayName: {
       type: String,
       required: true,
       trim: true,
       maxlength: 80,
     },
+    avatarUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     avatarColor: {
       type: String,
-      required: true,
       trim: true,
+      default: "from-emerald-300 to-cyan-200",
     },
     role: {
       type: String,
@@ -21,20 +42,22 @@ const userSchema = new mongoose.Schema(
       maxlength: 80,
       default: "Teammate",
     },
-    pin: {
-      type: String,
-      required: true,
-      match: pinPattern,
-      select: false,
-    },
-    projectId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Project",
-      required: true,
-      index: true,
-    },
   },
   { timestamps: true },
 );
+
+userSchema.pre("save", async function hashPassword(next) {
+  if (!this.isModified("password")) {
+    next();
+    return;
+  }
+
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+userSchema.methods.comparePassword = function comparePassword(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 export const User = mongoose.model("User", userSchema);

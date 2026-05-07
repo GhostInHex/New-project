@@ -1,7 +1,6 @@
 import { SendHorizontal } from "lucide-react";
 import { useState, useTransition } from "react";
 import { createLog } from "../lib/api.js";
-import { PROJECT_ID } from "../lib/team.js";
 import { Avatar } from "./ui/Avatar.jsx";
 import { Button } from "./ui/Button.jsx";
 import { Card } from "./ui/Card.jsx";
@@ -13,7 +12,7 @@ function normalizeThreeLines(value) {
   return value.split(/\r?\n/).slice(0, 3).join("\n").slice(0, 360);
 }
 
-export function LogEntryForm({ user, onSignOut, onLogCreated }) {
+export function LogEntryForm({ user, projectId, onSignOut, onLogCreated }) {
   const [category, setCategory] = useState(categories[0]);
   const [text, setText] = useState("");
   const [notice, setNotice] = useState("");
@@ -30,8 +29,7 @@ export function LogEntryForm({ user, onSignOut, onLogCreated }) {
     startTransition(async () => {
       try {
         await createLog({
-          userId: user.id,
-          projectId: user.projectId || PROJECT_ID,
+          projectId,
           category,
           text,
         });
@@ -51,7 +49,9 @@ export function LogEntryForm({ user, onSignOut, onLogCreated }) {
           <Avatar profile={user} />
           <div>
             <p className="text-sm uppercase text-emerald-200/80">Unlocked profile</p>
-            <h1 className="text-3xl font-semibold text-slate-50">{user.name}</h1>
+            <h1 className="text-3xl font-semibold text-slate-50">
+              {user.displayName || user.name}
+            </h1>
             <p className="mt-1 text-slate-400">{user.role}</p>
           </div>
         </div>

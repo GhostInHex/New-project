@@ -1,11 +1,10 @@
 import { Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 import { generateSummary } from "../lib/api.js";
-import { PROJECT_ID } from "../lib/team.js";
 import { Button } from "./ui/Button.jsx";
 import { Card } from "./ui/Card.jsx";
 
-export function AIInsightsCard() {
+export function AIInsightsCard({ projectId }) {
   const [insights, setInsights] = useState(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -15,7 +14,7 @@ export function AIInsightsCard() {
 
     startTransition(async () => {
       try {
-        const data = await generateSummary(PROJECT_ID);
+        const data = await generateSummary(projectId);
         setInsights(data);
       } catch (requestError) {
         setError(requestError.message);

@@ -10,31 +10,35 @@ const projectId = new mongoose.Types.ObjectId("665000000000000000000001");
 const members = [
   {
     _id: new mongoose.Types.ObjectId("665000000000000000000101"),
-    name: "Maya",
+    email: "maya@ghost.test",
+    password: "password123",
+    displayName: "Maya",
     role: "UI systems",
     avatarColor: "from-rose-300 to-amber-200",
-    pin: "1111",
   },
   {
     _id: new mongoose.Types.ObjectId("665000000000000000000102"),
-    name: "Ravi",
+    email: "ravi@ghost.test",
+    password: "password123",
+    displayName: "Ravi",
     role: "Backend",
     avatarColor: "from-cyan-300 to-teal-200",
-    pin: "2222",
   },
   {
     _id: new mongoose.Types.ObjectId("665000000000000000000103"),
-    name: "Nora",
+    email: "nora@ghost.test",
+    password: "password123",
+    displayName: "Nora",
     role: "Research",
     avatarColor: "from-lime-300 to-emerald-200",
-    pin: "3333",
   },
   {
     _id: new mongoose.Types.ObjectId("665000000000000000000104"),
-    name: "Theo",
+    email: "theo@ghost.test",
+    password: "password123",
+    displayName: "Theo",
     role: "Writing",
     avatarColor: "from-sky-300 to-indigo-200",
-    pin: "4444",
   },
 ];
 
@@ -45,16 +49,30 @@ await Project.findByIdAndUpdate(
   {
     name: "The Group Project Ghost",
     description: "A low-friction contribution log for a student team.",
+    inviteCode: "GHOST1",
+    creatorId: members[0]._id,
+    deadline: new Date("2026-05-20T18:00:00.000Z"),
+    maxMembers: 6,
+    status: "active",
     memberIds: members.map((member) => member._id),
   },
   { upsert: true, new: true },
 );
 
-await Promise.all(
-  members.map((member) =>
-    User.findByIdAndUpdate(member._id, { ...member, projectId }, { upsert: true, new: true }),
-  ),
-);
+for (const member of members) {
+  const user = await User.findById(member._id).select("+password");
 
-console.log("Seeded demo project and four PIN profiles.");
+  if (user) {
+    user.email = member.email;
+    user.displayName = member.displayName;
+    user.role = member.role;
+    user.avatarColor = member.avatarColor;
+    user.password = member.password;
+    await user.save();
+  } else {
+    await User.create(member);
+  }
+}
+
+console.log("Seeded demo project and four email/password accounts.");
 await mongoose.disconnect();

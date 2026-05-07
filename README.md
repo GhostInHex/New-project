@@ -26,11 +26,11 @@ The frontend expects the API at `http://localhost:4000/api` unless `VITE_API_URL
 
 ## Demo Profiles
 
-The seed script creates one demo project with four profile PINs:
+The seed script creates one demo project with four email/password accounts:
 
 ```text
-Maya  1111
-Ravi  2222
-Nora  3333
-Theo  4444
+maya@ghost.test  password123
+ravi@ghost.test  password123
+nora@ghost.test  password123
+theo@ghost.test  password123
 ```

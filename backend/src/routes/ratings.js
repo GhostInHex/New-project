@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
+import { Project } from "../models/Project.js";
 import { Rating } from "../models/Rating.js";
-import { User } from "../models/User.js";
 
 const router = express.Router();
 
@@ -11,9 +11,10 @@ function isScore(value) {
 
 router.post("/", async (req, res, next) => {
   try {
-    const { projectId, reviewerId, ratings } = req.body;
+    const { projectId, ratings } = req.body;
+    const reviewerId = req.user.id;
 
-    if (!projectId || !reviewerId || !Array.isArray(ratings) || ratings.length === 0) {
+    if (!projectId || !Array.isArray(ratings) || ratings.length === 0) {
       return res.status(400).json({ message: "Send a reviewer, project, and teammate ratings." });
     }
 
@@ -21,12 +22,13 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "Invalid project or reviewer." });
     }
 
-    const members = await User.find({ projectId }).select("_id").lean();
-    const memberIds = new Set(members.map((member) => member._id.toString()));
+    const project = await Project.findOne({ _id: projectId, memberIds: req.user._id }).lean();
 
-    if (!memberIds.has(reviewerId)) {
+    if (!project) {
       return res.status(403).json({ message: "Reviewer is not part of this project." });
     }
+
+    const memberIds = new Set(project.memberIds.map((memberId) => memberId.toString()));
 
     const documents = ratings.map((rating) => {
       const targetUserId = String(rating.targetUserId || "");

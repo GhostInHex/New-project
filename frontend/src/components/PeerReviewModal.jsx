@@ -1,7 +1,6 @@
 import { ShieldCheck, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { submitRatings } from "../lib/api.js";
-import { PROJECT_ID, demoProfiles } from "../lib/team.js";
 import { Button } from "./ui/Button.jsx";
 
 const criteria = [
@@ -10,10 +9,10 @@ const criteria = [
   ["collaborationScore", "Collaboration"],
 ];
 
-function createInitialRatings(activeUserId) {
+function createInitialRatings(activeUserId, members) {
   return Object.fromEntries(
-    demoProfiles
-      .filter((profile) => profile.id !== activeUserId)
+    members
+      .filter((member) => member.id !== activeUserId)
       .map((profile) => [
         profile.id,
         {
@@ -26,15 +25,15 @@ function createInitialRatings(activeUserId) {
   );
 }
 
-export function PeerReviewModal({ activeUser, onClose }) {
-  const [ratingsByUser, setRatingsByUser] = useState(() => createInitialRatings(activeUser.id));
+export function PeerReviewModal({ activeUser, members, projectId, onClose, onSubmitted }) {
+  const [ratingsByUser, setRatingsByUser] = useState(() => createInitialRatings(activeUser.id, members));
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const teammates = useMemo(
-    () => demoProfiles.filter((profile) => profile.id !== activeUser.id),
-    [activeUser.id],
+    () => members.filter((profile) => profile.id !== activeUser.id),
+    [activeUser.id, members],
   );
 
   function updateScore(targetUserId, key, value) {
@@ -55,11 +54,11 @@ export function PeerReviewModal({ activeUser, onClose }) {
     startTransition(async () => {
       try {
         await submitRatings({
-          projectId: activeUser.projectId || PROJECT_ID,
-          reviewerId: activeUser.id,
+          projectId,
           ratings: Object.values(ratingsByUser),
         });
         setNotice("Peer review saved anonymously for the final aggregate.");
+        await onSubmitted?.();
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -96,7 +95,9 @@ export function PeerReviewModal({ activeUser, onClose }) {
             <section key={teammate.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-100">{teammate.name}</h3>
+                  <h3 className="font-semibold text-slate-100">
+                    {teammate.displayName || teammate.name}
+                  </h3>
                   <p className="text-sm text-slate-500">{teammate.role}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -104,7 +105,7 @@ export function PeerReviewModal({ activeUser, onClose }) {
                     <label key={key} className="block min-w-32">
                       <span className="mb-2 block text-xs font-semibold uppercase text-slate-500">{label}</span>
                       <select
-                        value={ratingsByUser[teammate.id][key]}
+                        value={ratingsByUser[teammate.id]?.[key] || 3}
                         onChange={(event) => updateScore(teammate.id, key, event.target.value)}
                         className="h-11 w-full rounded-lg border border-white/12 bg-slate-950 px-3 text-sm text-slate-100 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/20"
                       >

@@ -10,7 +10,6 @@ import {
   YAxis,
 } from "recharts";
 import { getTimeline } from "../lib/api.js";
-import { PROJECT_ID } from "../lib/team.js";
 import { Avatar } from "./ui/Avatar.jsx";
 import { Button } from "./ui/Button.jsx";
 import { Card } from "./ui/Card.jsx";
@@ -24,7 +23,14 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-export function TimelineDashboard({ refreshKey = 0, onEndProject }) {
+export function TimelineDashboard({
+  projectId,
+  projectStatus = "active",
+  refreshKey = 0,
+  onEndProject,
+  onMembersLoaded,
+  onProjectLoaded,
+}) {
   const [timeline, setTimeline] = useState(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -34,8 +40,10 @@ export function TimelineDashboard({ refreshKey = 0, onEndProject }) {
 
     startTransition(async () => {
       try {
-        const data = await getTimeline(PROJECT_ID);
+        const data = await getTimeline(projectId);
         setTimeline(data);
+        onMembersLoaded?.(data.members || []);
+        onProjectLoaded?.(data.project);
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -44,7 +52,7 @@ export function TimelineDashboard({ refreshKey = 0, onEndProject }) {
 
   useEffect(() => {
     loadTimeline();
-  }, [refreshKey]);
+  }, [projectId, refreshKey]);
 
   const members = timeline?.members || [];
   const logs = timeline?.logs || [];
@@ -61,9 +69,11 @@ export function TimelineDashboard({ refreshKey = 0, onEndProject }) {
             <Button type="button" variant="ghost" onClick={loadTimeline} disabled={isPending} aria-label="Refresh timeline">
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            <Button type="button" variant="secondary" onClick={onEndProject}>
-              End Project
-            </Button>
+            {projectStatus === "active" ? (
+              <Button type="button" variant="secondary" onClick={onEndProject}>
+                End Project
+              </Button>
+            ) : null}
           </div>
         </div>
 

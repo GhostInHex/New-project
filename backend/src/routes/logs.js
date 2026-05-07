@@ -1,16 +1,16 @@
 import express from "express";
 import { Log, LOG_CATEGORIES } from "../models/Log.js";
-import { User } from "../models/User.js";
+import { Project } from "../models/Project.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res, next) => {
   try {
-    const { userId, projectId, text, category } = req.body;
+    const { projectId, text, category } = req.body;
     const cleanText = String(text || "").trim();
 
-    if (!userId || !projectId) {
-      return res.status(400).json({ message: "A profile and project are required." });
+    if (!projectId) {
+      return res.status(400).json({ message: "A project is required." });
     }
 
     if (!LOG_CATEGORIES.includes(category)) {
@@ -21,14 +21,14 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "Keep your update to 3 short lines or fewer." });
     }
 
-    const user = await User.findOne({ _id: userId, projectId });
+    const project = await Project.findOne({ _id: projectId, memberIds: req.user._id });
 
-    if (!user) {
-      return res.status(403).json({ message: "This profile is not part of that project." });
+    if (!project) {
+      return res.status(403).json({ message: "This account is not part of that project." });
     }
 
     const log = await Log.create({
-      userId,
+      userId: req.user._id,
       projectId,
       text: cleanText,
       category,

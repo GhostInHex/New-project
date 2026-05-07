@@ -1,9 +1,13 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useTransition } from "react";
 import { AIInsightsCard } from "./components/AIInsightsCard.jsx";
+import { AuthPanel } from "./components/AuthPanel.jsx";
+import { HubView } from "./components/HubView.jsx";
 import { LogEntryForm } from "./components/LogEntryForm.jsx";
-import { PINModal } from "./components/PINModal.jsx";
-import { ProfileGrid } from "./components/ProfileGrid.jsx";
-import { demoProfiles } from "./lib/team.js";
+import { PrivateCoachingCard } from "./components/PrivateCoachingCard.jsx";
+import { ProjectEndedBanner } from "./components/ProjectEndedBanner.jsx";
+import { ProfilePage } from "./components/ProfilePage.jsx";
+import { Button } from "./components/ui/Button.jsx";
+import { getMe, logout, toggleProjectStatus } from "./lib/api.js";
 
 const PeerReviewModal = lazy(() =>
   import("./components/PeerReviewModal.jsx").then((module) => ({
@@ -16,15 +20,79 @@ const TimelineDashboard = lazy(() =>
   })),
 );
 
+function currentPath() {
+  return window.location.pathname === "/" ? "/login" : window.location.pathname;
+}
+
 export default function App() {
-  const [selectedProfile, setSelectedProfile] = useState(null);
   const [activeUser, setActiveUser] = useState(null);
+  const [route, setRoute] = useState(currentPath);
   const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [projectMembers, setProjectMembers] = useState([]);
+  const [activeProject, setActiveProject] = useState(null);
+  const [isBooting, setIsBooting] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
-  function handleVerified(user) {
+  useEffect(() => {
+    function syncRoute() {
+      setRoute(currentPath());
+    }
+
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
+  }, []);
+
+  useEffect(() => {
+    startTransition(async () => {
+      try {
+        const data = await getMe();
+        setActiveUser(data.user);
+        if (route === "/login" || route === "/register") {
+          navigate("/hub");
+        }
+      } catch (_error) {
+        setActiveUser(null);
+      } finally {
+        setIsBooting(false);
+      }
+    });
+  }, []);
+
+  function navigate(path) {
+    window.history.pushState({}, "", path);
+    setRoute(path);
+  }
+
+  function handleAuthed(user, mode) {
     setActiveUser(user);
-    setSelectedProfile(null);
+    navigate(mode === "register" ? "/profile" : "/hub");
+  }
+
+  function handleLogout() {
+    startTransition(async () => {
+      await logout();
+      setActiveUser(null);
+      setProjectMembers([]);
+      setActiveProject(null);
+      navigate("/login");
+    });
+  }
+
+  const isAuthRoute = route === "/login" || route === "/register";
+  const activeProjectId = route.startsWith("/project/") ? route.split("/")[2] : null;
+  const isProjectStateReady = activeProjectId && String(activeProject?.id) === activeProjectId;
+  const isArchived = isProjectStateReady && activeProject?.status === "archived";
+
+  async function handleToggleProjectStatus() {
+    if (!activeProjectId) {
+      return;
+    }
+
+    const data = await toggleProjectStatus(activeProjectId);
+    setActiveProject(data.project);
+    setTimelineRefreshKey((key) => key + 1);
+    setIsReviewOpen(false);
   }
 
   return (
@@ -35,25 +103,81 @@ export default function App() {
       <div className="relative mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase text-emerald-200/80">The Group Project Ghost</p>
+            <p className="text-sm font-semibold uppercase text-emerald-200/80">
+              The Group Project Ghost
+            </p>
             <h1 className="mt-3 max-w-3xl text-4xl font-black text-slate-50 sm:text-5xl">
-              A quiet daily check-in for teams that want fewer mystery gaps.
+              A quieter operating room for messy group projects.
             </h1>
           </div>
-          <p className="max-w-sm text-sm leading-6 text-slate-400">
-            Opt in, unlock your profile, and leave a short contribution note. No class dashboard, no
-            public ranking, no weird surveillance energy.
-          </p>
+          {activeUser ? (
+            <nav className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={route === "/hub" ? "primary" : "secondary"}
+                onClick={() => navigate("/hub")}
+              >
+                Hub
+              </Button>
+              {activeProjectId ? (
+                <Button type="button" variant="primary" onClick={() => navigate(route)}>
+                  Project
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant={route === "/profile" ? "primary" : "secondary"}
+                onClick={() => navigate("/profile")}
+              >
+                Profile
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleLogout} disabled={isPending}>
+                Log Out
+              </Button>
+            </nav>
+          ) : (
+            <p className="max-w-sm text-sm leading-6 text-slate-400">
+              Email sessions now unlock the same supportive timeline, peer review, and AI reflection
+              flow for real student accounts.
+            </p>
+          )}
         </header>
 
         <div className="flex flex-1 items-center">
-          {activeUser ? (
+          {isBooting ? (
+            <div className="mx-auto rounded-lg border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-400">
+              Checking session
+            </div>
+          ) : !activeUser || isAuthRoute ? (
+            <AuthPanel
+              mode={route === "/register" ? "register" : "login"}
+              onModeChange={(mode) => navigate(`/${mode}`)}
+              onAuthed={handleAuthed}
+            />
+          ) : route === "/profile" ? (
+            <ProfilePage user={activeUser} onUpdated={setActiveUser} />
+          ) : route === "/hub" ? (
+            <HubView onOpenProject={(projectId) => navigate(`/project/${projectId}`)} />
+          ) : activeProjectId ? (
             <div className="w-full">
-              <LogEntryForm
-                user={activeUser}
-                onSignOut={() => setActiveUser(null)}
-                onLogCreated={() => setTimelineRefreshKey((key) => key + 1)}
-              />
+              {!isProjectStateReady ? (
+                <div className="mx-auto w-full max-w-5xl rounded-lg border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-400">
+                  Loading project state
+                </div>
+              ) : isArchived ? (
+                <ProjectEndedBanner
+                  project={activeProject}
+                  onRestore={handleToggleProjectStatus}
+                  isRestoring={isPending}
+                />
+              ) : (
+                <LogEntryForm
+                  user={activeUser}
+                  projectId={activeProjectId}
+                  onSignOut={handleLogout}
+                  onLogCreated={() => setTimelineRefreshKey((key) => key + 1)}
+                />
+              )}
               <Suspense
                 fallback={
                   <div className="mx-auto mt-6 w-full max-w-5xl rounded-lg border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-400">
@@ -62,26 +186,32 @@ export default function App() {
                 }
               >
                 <TimelineDashboard
+                  projectId={activeProjectId}
+                  projectStatus={isProjectStateReady ? activeProject.status : "loading"}
                   refreshKey={timelineRefreshKey}
+                  onMembersLoaded={setProjectMembers}
+                  onProjectLoaded={setActiveProject}
                   onEndProject={() => setIsReviewOpen(true)}
                 />
               </Suspense>
-              <AIInsightsCard />
+              <AIInsightsCard projectId={activeProjectId} />
+              {isArchived ? <PrivateCoachingCard projectId={activeProjectId} /> : null}
             </div>
           ) : (
-            <ProfileGrid profiles={demoProfiles} onSelect={setSelectedProfile} />
+            <HubView onOpenProject={(projectId) => navigate(`/project/${projectId}`)} />
           )}
         </div>
       </div>
 
-      <PINModal
-        profile={selectedProfile}
-        onClose={() => setSelectedProfile(null)}
-        onVerified={handleVerified}
-      />
       {activeUser && isReviewOpen ? (
         <Suspense fallback={null}>
-          <PeerReviewModal activeUser={activeUser} onClose={() => setIsReviewOpen(false)} />
+          <PeerReviewModal
+            activeUser={activeUser}
+            members={projectMembers}
+            projectId={activeProjectId}
+            onClose={() => setIsReviewOpen(false)}
+            onSubmitted={handleToggleProjectStatus}
+          />
         </Suspense>
       ) : null}
     </main>

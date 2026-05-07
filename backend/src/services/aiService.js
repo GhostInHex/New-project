@@ -23,6 +23,17 @@ const SUMMARY_SCHEMA = {
   propertyOrdering: ["summary", "key_strengths", "areas_for_alignment"],
 };
 
+const PRIVATE_COACHING_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    private_coaching: {
+      type: "STRING",
+    },
+  },
+  required: ["private_coaching"],
+  propertyOrdering: ["private_coaching"],
+};
+
 function categoryCounts(logs) {
   return logs.reduce((counts, log) => {
     counts[log.category] = (counts[log.category] || 0) + 1;
@@ -148,6 +159,77 @@ async function generateGeminiSummary(context) {
   };
 }
 
+function buildPrivateCoachingPrompt({ effortScore, qualityScore, collaborationScore }) {
+  return `You are an empathetic, private career coach for college students. The user has just finished a group project. Based on their peer rating averages (Effort: ${effortScore}/5, Quality: ${qualityScore}/5, Collaboration: ${collaborationScore}/5), write a short, 3-sentence personalized feedback block. Highlight their strength and suggest one gentle area for growth. Keep it highly encouraging. NEVER mention specific numbers or who rated them. Return JSON with a single key: 'private_coaching'.`;
+}
+
+function buildLocalPrivateCoaching({ effortScore, qualityScore, collaborationScore }) {
+  const strongest =
+    [
+      ["effort", effortScore],
+      ["quality", qualityScore],
+      ["collaboration", collaborationScore],
+    ].sort((a, b) => b[1] - a[1])[0]?.[0] || "contribution";
+
+  return {
+    private_coaching: `Your teammates' feedback points to ${strongest} as a meaningful strength, and that is a strong foundation to carry into the next project. A gentle growth opportunity is to keep making your work and decision process visible early, so teammates can support momentum before crunch time. Keep treating feedback as signal, not a verdict; this project gives you useful evidence that your contributions can keep getting sharper.`,
+    provider: "local-placeholder",
+  };
+}
+
+async function generateGeminiPrivateCoaching(context) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+  if (!apiKey) {
+    throw Object.assign(new Error("GEMINI_API_KEY is required when AI_PROVIDER=gemini."), {
+      status: 500,
+    });
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: buildPrivateCoachingPrompt(context) }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.45,
+          responseMimeType: "application/json",
+          responseSchema: PRIVATE_COACHING_SCHEMA,
+        },
+      }),
+    },
+  );
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = payload.error?.message || "Gemini private coaching generation failed.";
+    throw Object.assign(new Error(message), { status: 502 });
+  }
+
+  const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw Object.assign(new Error("Gemini returned empty private coaching."), { status: 502 });
+  }
+
+  return {
+    ...JSON.parse(text),
+    provider: "gemini",
+  };
+}
+
 export async function generateDiplomatSummary(context) {
   const provider = process.env.AI_PROVIDER || "local";
 
@@ -157,4 +239,14 @@ export async function generateDiplomatSummary(context) {
 
   prepareDiplomatPrompt(context);
   return buildLocalDiplomatSummary(context);
+}
+
+export async function generatePrivateCoaching(context) {
+  const provider = process.env.AI_PROVIDER || "local";
+
+  if (provider === "gemini") {
+    return generateGeminiPrivateCoaching(context);
+  }
+
+  return buildLocalPrivateCoaching(context);
 }
