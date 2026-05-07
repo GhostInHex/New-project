@@ -13,7 +13,7 @@ const app = express();
 function allowedOrigins() {
   return new Set(
     [
-      "http://localhost:5173",
+      "https://new-project-dun-tau.vercel.app/",
       "http://localhost:4173",
       ...(process.env.FRONTEND_ORIGIN || "")
         .split(",")

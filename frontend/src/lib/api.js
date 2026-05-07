@@ -1,4 +1,4 @@
-const RAW_API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const RAW_API_BASE_URL = import.meta.env.VITE_API_URL || "https://new-project-iaad.onrender.com";
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/$/, "").endsWith("/api")
   ? RAW_API_BASE_URL.replace(/\/$/, "")
   : `${RAW_API_BASE_URL.replace(/\/$/, "")}/api`;
