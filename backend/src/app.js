@@ -10,9 +10,29 @@ import { notFound, errorHandler } from "./middleware/errors.js";
 
 const app = express();
 
+function allowedOrigins() {
+  return new Set(
+    [
+      "http://localhost:5173",
+      "http://localhost:4173",
+      ...(process.env.FRONTEND_ORIGIN || "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ].map((origin) => origin.replace(/\/$/, "")),
+  );
+}
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, allowedOrigins().has(origin.replace(/\/$/, "")));
+    },
     credentials: true,
   }),
 );

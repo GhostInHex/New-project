@@ -24,6 +24,33 @@ bun run dev
 
 The frontend expects the API at `http://localhost:4000/api` unless `VITE_API_URL` is set.
 
+## Production URLs
+
+Backend API:
+
+```text
+https://new-project-iaad.onrender.com/api
+```
+
+Frontend app:
+
+```text
+https://new-project-dun-tau.vercel.app
+```
+
+Render backend environment:
+
+```text
+NODE_ENV=production
+FRONTEND_ORIGIN=https://new-project-dun-tau.vercel.app
+```
+
+Vercel frontend environment:
+
+```text
+VITE_API_URL=https://new-project-iaad.onrender.com/api
+```
+
 ## Demo Profiles
 
 The seed script creates one demo project with four email/password accounts:
