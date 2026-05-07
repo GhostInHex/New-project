@@ -206,6 +206,20 @@ function geminiApiKeys() {
   return process.env.GEMINI_API_KEY ? [process.env.GEMINI_API_KEY] : [];
 }
 
+function selectedAiProvider() {
+  const configuredProvider = String(process.env.AI_PROVIDER || "").trim().toLowerCase();
+
+  if (configuredProvider === "local-only") {
+    return "local";
+  }
+
+  if (configuredProvider === "gemini" || geminiApiKeys().length) {
+    return "gemini";
+  }
+
+  return "local";
+}
+
 function logAiFallback(scope, error) {
   console.warn(`[Ghost Cache] ${scope} AI fallback used: ${error.message}`);
 }
@@ -446,7 +460,7 @@ async function generateGeminiPrivateCoaching(context) {
 }
 
 export async function generateDiplomatSummary(context) {
-  const provider = process.env.AI_PROVIDER || "local";
+  const provider = selectedAiProvider();
 
   if (provider === "gemini") {
     try {
@@ -462,7 +476,7 @@ export async function generateDiplomatSummary(context) {
 }
 
 export async function generatePrivateCoaching(context) {
-  const provider = process.env.AI_PROVIDER || "local";
+  const provider = selectedAiProvider();
 
   if (provider === "gemini") {
     try {

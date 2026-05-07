@@ -52,7 +52,12 @@ export function AIInsightsCard({ projectId }) {
       {insights ? (
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-lg border border-white/8 bg-white/[0.04] p-4">
-            <h3 className="text-sm font-semibold uppercase text-slate-500">Reflection</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold uppercase text-slate-500">Reflection</h3>
+              <span className="rounded-full border border-cyan-200/15 bg-cyan-200/10 px-3 py-1 text-xs font-semibold text-cyan-100">
+                {insights.provider === "gemini" ? "Gemini live" : "Ghost cache"}
+              </span>
+            </div>
             <div className="mt-3 space-y-4 whitespace-pre-line text-sm leading-6 text-slate-300">
               {insights.summary}
             </div>

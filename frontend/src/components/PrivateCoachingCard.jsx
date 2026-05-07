@@ -14,7 +14,7 @@ export function PrivateCoachingCard({ projectId }) {
     startTransition(async () => {
       try {
         const data = await getMyFeedback(projectId);
-        setCoaching(data.private_coaching);
+        setCoaching(data);
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -43,7 +43,16 @@ export function PrivateCoachingCard({ projectId }) {
       ) : null}
 
       <div className="mt-5 rounded-lg border border-white/10 bg-slate-950/45 p-4 text-sm leading-6 text-indigo-50/90">
-        {isPending && !coaching ? "Preparing private coaching" : coaching}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="min-w-0 flex-1">
+            {isPending && !coaching ? "Preparing private coaching" : coaching?.private_coaching}
+          </span>
+          {coaching?.provider ? (
+            <span className="shrink-0 rounded-full border border-indigo-200/15 bg-indigo-200/10 px-3 py-1 text-xs font-semibold text-indigo-100">
+              {coaching.provider === "gemini" ? "Gemini live" : "Ghost cache"}
+            </span>
+          ) : null}
+        </div>
       </div>
     </Card>
   );
