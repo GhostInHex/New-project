@@ -1,4 +1,4 @@
-import { Activity, RefreshCcw } from "lucide-react";
+import { Activity, Github, RefreshCcw } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import {
   Bar,
@@ -134,6 +134,17 @@ export function TimelineDashboard({
                         {log.category}
                       </span>
                       <time className="text-xs text-slate-500">{formatDate(log.timestamp)}</time>
+                      {log.githubLink ? (
+                        <a
+                          href={log.githubLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-white/8 hover:text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
+                          aria-label="Open relevant PR or link"
+                        >
+                          <Github className="h-4 w-4" />
+                        </a>
+                      ) : null}
                     </div>
                     <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300">{log.text}</p>
                   </div>

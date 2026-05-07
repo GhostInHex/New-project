@@ -1,4 +1,4 @@
-import { SendHorizontal } from "lucide-react";
+import { Github, SendHorizontal, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import { createLog } from "../lib/api.js";
 import { Avatar } from "./ui/Avatar.jsx";
@@ -15,6 +15,8 @@ function normalizeThreeLines(value) {
 export function LogEntryForm({ user, projectId, onSignOut, onLogCreated }) {
   const [category, setCategory] = useState(categories[0]);
   const [text, setText] = useState("");
+  const [githubLink, setGithubLink] = useState("");
+  const [isGithubOpen, setIsGithubOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -32,8 +34,11 @@ export function LogEntryForm({ user, projectId, onSignOut, onLogCreated }) {
           projectId,
           category,
           text,
+          githubLink,
         });
         setText("");
+        setGithubLink("");
+        setIsGithubOpen(false);
         setNotice("Update posted. Tiny receipts, future-you will thank us.");
         onLogCreated?.();
       } catch (requestError) {
@@ -101,6 +106,51 @@ export function LogEntryForm({ user, projectId, onSignOut, onLogCreated }) {
               ))}
             </div>
           </fieldset>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setIsGithubOpen((value) => !value)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-slate-400 transition hover:bg-white/8 hover:text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
+              aria-expanded={isGithubOpen}
+            >
+              <Github className="h-4 w-4" />
+              Relevant PR / Link
+            </button>
+
+            <div
+              className={`grid transition-all duration-200 ${
+                isGithubOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="overflow-hidden">
+                <label className="mt-3 block">
+                  <span className="sr-only">Attach a relevant PR or Link (Optional)</span>
+                  <span className="relative block">
+                    <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="url"
+                      value={githubLink}
+                      onChange={(event) => setGithubLink(event.target.value)}
+                      className="h-11 w-full rounded-lg border border-white/12 bg-slate-950/70 py-2 pl-11 pr-12 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/20"
+                      placeholder="Attach a relevant PR or Link (Optional)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGithubLink("");
+                        setIsGithubOpen(false);
+                      }}
+                      className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-slate-500 transition hover:bg-white/8 hover:text-slate-200"
+                      aria-label="Remove GitHub link"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
 
           <label className="mt-6 block">
             <span className="mb-3 block text-sm font-medium text-slate-300">Update</span>

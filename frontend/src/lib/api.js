@@ -57,10 +57,10 @@ export function updateMe({ displayName, avatarUrl }) {
   });
 }
 
-export function createLog({ projectId, category, text }) {
+export function createLog({ projectId, category, text, githubLink }) {
   return request("/logs", {
     method: "POST",
-    body: JSON.stringify({ projectId, category, text }),
+    body: JSON.stringify({ projectId, category, text, githubLink }),
   });
 }
 
@@ -72,10 +72,10 @@ export function getMyProjects() {
   return request("/projects/my-projects");
 }
 
-export function createProject({ name, description, deadline, maxMembers }) {
+export function createProject({ name, description, githubRepoUrl, deadline, maxMembers }) {
   return request("/projects", {
     method: "POST",
-    body: JSON.stringify({ name, description, deadline, maxMembers }),
+    body: JSON.stringify({ name, description, githubRepoUrl, deadline, maxMembers }),
   });
 }
 

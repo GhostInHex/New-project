@@ -49,6 +49,7 @@ await Project.findByIdAndUpdate(
   {
     name: "The Group Project Ghost",
     description: "A low-friction contribution log for a student team.",
+    githubRepoUrl: "",
     inviteCode: "GHOST1",
     creatorId: members[0]._id,
     deadline: new Date("2026-05-20T18:00:00.000Z"),

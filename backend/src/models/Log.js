@@ -27,6 +27,12 @@ const logSchema = new mongoose.Schema(
       enum: LOG_CATEGORIES,
       required: true,
     },
+    githubLink: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: "",
+    },
     timestamp: {
       type: Date,
       default: Date.now,

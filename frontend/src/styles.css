@@ -2,11 +2,12 @@
 
 :root {
   color-scheme: dark;
+  --font-display: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "SFMono-Regular", "Cascadia Code", Consolas, ui-monospace,
+    monospace;
   font-family:
-    "Aptos",
-    "Segoe UI",
-    ui-sans-serif,
-    sans-serif;
+    var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,6 +20,190 @@
 body {
   margin: 0;
   min-width: 320px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+code,
+kbd,
+pre,
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.landing-ink {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 248, 232, 0.88);
+  text-shadow: 0 0 42px rgba(255, 199, 95, 0.16);
+}
+
+.landing-reveal {
+  animation: landing-rise 760ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.landing-reveal-delay {
+  animation-delay: 120ms;
+}
+
+.landing-reveal-late {
+  animation-delay: 220ms;
+}
+
+.liquid-navbar {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.liquid-navbar::before {
+  content: "";
+  position: absolute;
+  inset: -45% -18%;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 24% 26%, rgba(103, 232, 249, 0.34), transparent 28%),
+    radial-gradient(circle at 76% 16%, rgba(129, 140, 248, 0.26), transparent 24%),
+    radial-gradient(circle at 52% 88%, rgba(16, 185, 129, 0.18), transparent 28%);
+  filter: blur(18px) saturate(1.25);
+  opacity: 0.78;
+  animation: liquid-drift 9s ease-in-out infinite alternate;
+}
+
+.liquid-navbar::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -20px 42px rgba(2, 132, 199, 0.08);
+  pointer-events: none;
+}
+
+.liquid-navbar__wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.16) 24%,
+      rgba(103, 232, 249, 0.15) 30%,
+      transparent 43%
+    );
+  opacity: 0.38;
+  transform: translateX(-55%) skewX(-14deg);
+  animation: liquid-shimmer 6.8s cubic-bezier(0.2, 0.72, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.liquid-nav-link,
+.liquid-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.liquid-nav-link::before,
+.liquid-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 38% 0%, rgba(255, 255, 255, 0.2), transparent 38%),
+    linear-gradient(135deg, rgba(103, 232, 249, 0.16), rgba(129, 140, 248, 0.1));
+  opacity: 0;
+  transition: opacity 260ms ease, transform 260ms ease;
+  transform: scale(0.88);
+}
+
+.liquid-nav-link:hover::before,
+.liquid-nav-link:focus-visible::before,
+.liquid-cta:hover::before,
+.liquid-cta:focus-visible::before,
+.liquid-cta.is-active::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.liquid-nav-link:hover,
+.liquid-cta:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.liquid-cta.primary {
+  color: #06111f;
+  background:
+    linear-gradient(135deg, rgba(224, 242, 254, 0.96), rgba(165, 243, 252, 0.92) 45%, rgba(196, 181, 253, 0.96)),
+    rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 34px rgba(103, 232, 249, 0.25);
+}
+
+.liquid-cta.secondary {
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.liquid-cta.ghost {
+  color: rgba(226, 232, 240, 0.76);
+  background: transparent;
+}
+
+.liquid-cta.is-active {
+  border-color: rgba(165, 243, 252, 0.35);
+  color: #f8fafc;
+}
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes liquid-drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1);
+  }
+
+  to {
+    transform: translate3d(3%, 2%, 0) rotate(3deg) scale(1.04);
+  }
+}
+
+@keyframes liquid-shimmer {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateX(-62%) skewX(-14deg);
+  }
+
+  58% {
+    opacity: 0.52;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(80%) skewX(-14deg);
+  }
 }
 
 button,

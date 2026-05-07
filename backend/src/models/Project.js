@@ -14,6 +14,12 @@ const projectSchema = new mongoose.Schema(
       maxlength: 500,
       default: "",
     },
+    githubRepoUrl: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: "",
+    },
     inviteCode: {
       type: String,
       required: true,

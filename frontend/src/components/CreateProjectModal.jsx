@@ -1,4 +1,4 @@
-import { CalendarClock, Copy, X } from "lucide-react";
+import { CalendarClock, Copy, Github, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import { createProject } from "../lib/api.js";
 import { Button } from "./ui/Button.jsx";
@@ -6,6 +6,7 @@ import { Button } from "./ui/Button.jsx";
 export function CreateProjectModal({ onClose, onCreated }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [githubRepoUrl, setGithubRepoUrl] = useState("");
   const [deadline, setDeadline] = useState("");
   const [maxMembers, setMaxMembers] = useState(6);
   const [createdProject, setCreatedProject] = useState(null);
@@ -19,7 +20,7 @@ export function CreateProjectModal({ onClose, onCreated }) {
 
     startTransition(async () => {
       try {
-        const data = await createProject({ name, description, deadline, maxMembers });
+        const data = await createProject({ name, description, githubRepoUrl, deadline, maxMembers });
         setCreatedProject(data.project);
         onCreated(data.project);
       } catch (requestError) {
@@ -86,6 +87,22 @@ export function CreateProjectModal({ onClose, onCreated }) {
                 className="h-12 w-full rounded-lg border border-white/12 bg-slate-950/80 px-4 text-slate-100 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/20"
                 placeholder="Amazon clone MVP, OS scheduler, research sprint"
               />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">
+                GitHub Repository URL (Optional)
+              </span>
+              <span className="relative block">
+                <Github className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="url"
+                  value={githubRepoUrl}
+                  onChange={(event) => setGithubRepoUrl(event.target.value)}
+                  className="h-12 w-full rounded-lg border border-white/12 bg-slate-950/80 py-3 pl-11 pr-4 text-slate-100 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/20"
+                  placeholder="https://github.com/team/project"
+                />
+              </span>
             </label>
 
             <div className="grid gap-4 sm:grid-cols-[1fr_9rem]">

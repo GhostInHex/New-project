@@ -40,6 +40,7 @@ function projectCard(project) {
     id: project._id,
     name: project.name,
     description: project.description,
+    githubRepoUrl: project.githubRepoUrl || "",
     inviteCode: project.inviteCode,
     creatorId: project.creatorId,
     deadline: project.deadline,
@@ -66,6 +67,7 @@ router.post("/", async (req, res, next) => {
   try {
     const name = String(req.body.name || "").trim();
     const description = String(req.body.description || "").trim();
+    const githubRepoUrl = String(req.body.githubRepoUrl || "").trim();
     const deadline = new Date(req.body.deadline);
     const maxMembers = Number(req.body.maxMembers || 6);
 
@@ -84,6 +86,7 @@ router.post("/", async (req, res, next) => {
     const project = await Project.create({
       name,
       description,
+      githubRepoUrl,
       inviteCode: await createUniqueInviteCode(),
       creatorId: req.user._id,
       deadline,
@@ -112,6 +115,7 @@ router.post("/join-preview", async (req, res, next) => {
         id: project._id,
         name: project.name,
         description: project.description,
+        githubRepoUrl: project.githubRepoUrl || "",
         inviteCode: project.inviteCode,
         deadline: project.deadline,
         maxMembers: project.maxMembers,
@@ -241,6 +245,7 @@ router.get("/:id/timeline", async (req, res, next) => {
         id: project._id,
         name: project.name,
         description: project.description,
+        githubRepoUrl: project.githubRepoUrl || "",
         inviteCode: project.inviteCode,
         deadline: project.deadline,
         maxMembers: project.maxMembers,
@@ -259,6 +264,7 @@ router.get("/:id/timeline", async (req, res, next) => {
         id: log._id,
         text: log.text,
         category: log.category,
+        githubLink: log.githubLink || "",
         timestamp: log.timestamp,
         user: log.userId
           ? {

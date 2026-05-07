@@ -8,6 +8,7 @@ router.post("/", async (req, res, next) => {
   try {
     const { projectId, text, category } = req.body;
     const cleanText = String(text || "").trim();
+    const githubLink = String(req.body.githubLink || "").trim();
 
     if (!projectId) {
       return res.status(400).json({ message: "A project is required." });
@@ -32,6 +33,7 @@ router.post("/", async (req, res, next) => {
       projectId,
       text: cleanText,
       category,
+      githubLink,
     });
 
     res.status(201).json({ log });
